@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .story {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .choices {
+            margin-bottom: 20px;
+        }
+
+        .choices button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 1rem;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .choices button:hover {
+            background-color: #0056b3;
+        }
+
+        .progress {
+            margin-bottom: 20px;
+        }
+
+        .progress span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 50%;
+            background-color: #ddd;
+        }
+
+        .progress .current {
+            background-color: #007BFF;
+        }
+
+        .actions button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .actions .reset {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .actions .reset:hover {
+            background-color: #c82333;
+        }
+
+        .actions .save {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .actions .save:hover {
+            background-color: #218838;
+        }
+
+        .actions .resume {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .actions .resume:hover {
+            background-color: #e0a800;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="story" id="story">Welcome to the adventure! What will you do?</div>
+        <div class="choices" id="choices"></div>
+        <div class="progress" id="progress"></div>
+        <div class="actions">
+            <button class="save" onclick="saveProgress()">Save Progress</button>
+            <button class="resume" onclick="resumeProgress()">Resume</button>
+            <button class="reset" onclick="resetGame()">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        const storyData = {
+            1: {
+                text: "You find yourself in a dark forest. Two paths lie ahead.",
+                choices: [
+                    { text: "Take the left path.", next: 2 },
+                    { text: "Take the right path.", next: 3 }
+                ]
+            },
+            2: {
+                text: "The left path leads to a river. Do you want to swim across or follow the river?",
+                choices: [
+                    { text: "Swim across.", next: 4 },
+                    { text: "Follow the river.", next: 5 }
+                ]
+            },
+            3: {
+                text: "The right path takes you to a cave. Do you want to enter or keep walking?",
+                choices: [
+                    { text: "Enter the cave.", next: 6 },
+                    { text: "Keep walking.", next: 7 }
+                ]
+            },
+            4: {
+                text: "You swim across the river and find treasure! The adventure ends here.",
+                choices: []
+            },
+            5: {
+                text: "Following the river leads to a waterfall. The adventure ends here.",
+                choices: []
+            },
+            6: {
+                text: "The cave is dark and full of danger. You decide to turn back. The adventure ends here.",
+                choices: []
+            },
+            7: {
+                text: "You keep walking and find a peaceful meadow. The adventure ends here.",
+                choices: []
+            }
+        };
+
+        let currentStep = 1;
+        const storyElement = document.getElementById('story');
+        const choicesElement = document.getElementById('choices');
+        const progressElement = document.getElementById('progress');
+
+        function updateStory() {
+            const step = storyData[currentStep];
+            storyElement.textContent = step.text;
+            choicesElement.innerHTML = '';
+            step.choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.textContent = choice.text;
+                button.onclick = () => {
+                    currentStep = choice.next;
+                    updateStory();
+                    updateProgress();
+                };
+                choicesElement.appendChild(button);
+            });
+        }
+
+        function updateProgress() {
+            progressElement.innerHTML = '';
+            for (let i = 1; i <= Object.keys(storyData).length; i++) {
+                const span = document.createElement('span');
+                span.classList.add(i === currentStep ? 'current' : '');
+                progressElement.appendChild(span);
+            }
+        }
+
+        function saveProgress() {
+            try {
+                localStorage.setItem('currentStep', JSON.stringify(currentStep));
+                alert('Progress saved successfully!');
+            } catch (error) {
+                console.error('Error saving progress:', error);
+                alert('Failed to save progress. Please try again.');
+            }
+        }
+
+        function resumeProgress() {
+            try {
+                const savedStep = JSON.parse(localStorage.getItem('currentStep'));
+                if (savedStep) {
+                    currentStep = savedStep;
+                    updateStory();
+                    updateProgress();
+                } else {
+                    alert('No saved progress found.');
+                }
+            } catch (error) {
+                console.error('Error resuming progress:', error);
+                alert('Failed to resume progress. Please try again.');
+            }
+        }
+
+        function resetGame() {
+            currentStep = 1;
+            updateStory();
+            updateProgress();
+        }
+
+        updateStory();
+        updateProgress();
+    </script>
+</body>
+</html>

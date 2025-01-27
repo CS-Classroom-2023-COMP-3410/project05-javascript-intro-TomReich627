@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Keyboard Trainer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .trainer-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .text-display {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            background: #f7f7f7;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .text-display span {
+            font-family: monospace;
+        }
+
+        .text-display .error {
+            background-color: #ffc1c1;
+        }
+
+        .input-container {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .controls button, .controls select {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .results span {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .restart {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .restart:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Customizable Keyboard Trainer</h1>
+
+    <div class="trainer-container">
+        <div class="controls">
+            <label>
+                Difficulty:
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </label>
+            <button onclick="generateText()">Generate Text</button>
+        </div>
+
+        <div class="text-display" id="textDisplay"></div>
+
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Start typing here..." oninput="checkInput()" disabled />
+        </div>
+
+        <div class="results" id="results">
+            <span id="wpm">WPM: 0</span>
+            <span id="accuracy">Accuracy: 100%</span>
+        </div>
+
+        <button class="restart" onclick="restartTrainer()">Restart</button>
+    </div>
+
+    <script>
+        const textDisplay = document.getElementById('textDisplay');
+        const userInput = document.getElementById('userInput');
+        const wpmDisplay = document.getElementById('wpm');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const difficultySelect = document.getElementById('difficulty');
+
+        let targetText = '';
+        let startTime = null;
+        let totalCharacters = 0;
+        let errors = 0;
+        let isCompleted = false;
+
+        function generateText() {
+            const easyWords = ['cat', 'dog', 'tree', 'ball', 'run'];
+            const mediumWords = ['garden', 'player', 'sunlight', 'reading', 'window'];
+            const hardWords = ['exploration', 'keyboard', 'achievement', 'destination', 'algorithm'];
+
+            const wordCount = {
+                easy: 5,
+                medium: 8,
+                hard: 12
+            }[difficultySelect.value];
+
+            const wordPool = {
+                easy: easyWords,
+                medium: mediumWords,
+                hard: hardWords
+            }[difficultySelect.value];
+
+            targetText = Array.from({ length: wordCount }, () => wordPool[Math.floor(Math.random() * wordPool.length)]).join(' ');
+            textDisplay.innerHTML = targetText.split('').map(char => `<span>${char}</span>`).join('');
+
+            userInput.value = '';
+            userInput.disabled = false;
+            userInput.focus();
+            startTime = null;
+            totalCharacters = 0;
+            errors = 0;
+            isCompleted = false;
+            updateResults();
+        }
+
+        function checkInput() {
+            if (!startTime) startTime = Date.now();
+
+            const userText = userInput.value;
+            const targetChars = textDisplay.querySelectorAll('span');
+            totalCharacters = userText.length;
+            errors = 0;
+
+            targetChars.forEach((charSpan, index) => {
+                if (index < userText.length) {
+                    const char = userText[index];
+                    if (char === charSpan.textContent) {
+                        charSpan.classList.remove('error');
+                        charSpan.classList.add('correct');
+                    } else {
+                        charSpan.classList.remove('correct');
+                        charSpan.classList.add('error');
+                        errors++;
+                    }
+                } else {
+                    charSpan.classList.remove('correct', 'error');
+                }
+            });
+
+            const elapsedTime = (Date.now() - startTime) / 1000 / 60; // time in minutes
+            const words = targetText.split(' ').length;
+            const wpm = Math.round((words * totalCharacters / targetText.length) / elapsedTime);
+            wpmDisplay.textContent = `WPM: ${wpm}`;
+
+            if (userText === targetText && !isCompleted) {
+                isCompleted = true;
+                calculateResults();
+            } else {
+                updateResults();
+            }
+        }
+
+        function calculateResults() {
+            const elapsedTime = (Date.now() - startTime) / 1000 / 60; // time in minutes
+            const words = targetText.split(' ').length;
+            const wpm = Math.round((words * totalCharacters / targetText.length) / elapsedTime);
+            const accuracy = Math.round(((totalCharacters - errors) / totalCharacters) * 100);
+
+            wpmDisplay.textContent = `WPM: ${wpm}`;
+            accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
+
+            userInput.disabled = true;
+        }
+
+        function updateResults() {
+            const accuracy = totalCharacters > 0 ? Math.round(((totalCharacters - errors) / totalCharacters) * 100) : 100;
+            accuracyDisplay.textContent = `Accuracy: ${accuracy}%`;
+        }
+
+        function restartTrainer() {
+            wpmDisplay.textContent = 'WPM: 0';
+            accuracyDisplay.textContent = 'Accuracy: 100%';
+            generateText();
+        }
+
+        generateText();
+    </script>
+</body>
+</html>

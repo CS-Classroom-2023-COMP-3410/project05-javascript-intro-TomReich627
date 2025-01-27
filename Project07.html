@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .calculator {
+            width: 300px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .display {
+            width: 100%;
+            height: 50px;
+            background-color: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: right;
+            padding: 10px;
+            font-size: 1.5rem;
+            overflow: hidden;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .button {
+            padding: 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .button.function {
+            background-color: #6c757d;
+        }
+
+        .button.function:hover {
+            background-color: #5a6268;
+        }
+
+        .button.clear {
+            background-color: #dc3545;
+        }
+
+        .button.clear:hover {
+            background-color: #c82333;
+        }
+
+        .button.memory {
+            background-color: #28a745;
+        }
+
+        .button.memory:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="button" onclick="appendNumber('7')">7</button>
+            <button class="button" onclick="appendNumber('8')">8</button>
+            <button class="button" onclick="appendNumber('9')">9</button>
+            <button class="button function" onclick="setOperation('/')">÷</button>
+
+            <button class="button" onclick="appendNumber('4')">4</button>
+            <button class="button" onclick="appendNumber('5')">5</button>
+            <button class="button" onclick="appendNumber('6')">6</button>
+            <button class="button function" onclick="setOperation('*')">×</button>
+
+            <button class="button" onclick="appendNumber('1')">1</button>
+            <button class="button" onclick="appendNumber('2')">2</button>
+            <button class="button" onclick="appendNumber('3')">3</button>
+            <button class="button function" onclick="setOperation('-')">−</button>
+
+            <button class="button" onclick="appendNumber('0')">0</button>
+            <button class="button" onclick="appendNumber('.')">.</button>
+            <button class="button function" onclick="calculate()">=</button>
+            <button class="button function" onclick="setOperation('+')">+</button>
+
+            <button class="button function" onclick="calculateSquareRoot()">√</button>
+            <button class="button function" onclick="calculatePercentage()">%</button>
+            <button class="button memory" onclick="recallMemory()">MR</button>
+            <button class="button clear" onclick="clearDisplay()">C</button>
+        </div>
+    </div>
+
+    <script>
+        let displayValue = '0';
+        let firstOperand = null;
+        let secondOperand = null;
+        let currentOperation = null;
+        let memory = 0;
+
+        const display = document.getElementById('display');
+
+        function updateDisplay() {
+            display.textContent = displayValue;
+        }
+
+        function appendNumber(number) {
+            if (displayValue === '0' || currentOperation && secondOperand === null) {
+                displayValue = number;
+            } else {
+                displayValue += number;
+            }
+            if (currentOperation) secondOperand = parseFloat(displayValue);
+            updateDisplay();
+        }
+
+        function setOperation(operation) {
+            if (currentOperation && secondOperand !== null) {
+                calculate();
+            }
+            firstOperand = parseFloat(displayValue);
+            currentOperation = operation;
+            secondOperand = null;
+        }
+
+        function calculate() {
+            if (currentOperation && firstOperand !== null && secondOperand !== null) {
+                switch (currentOperation) {
+                    case '+':
+                        displayValue = (firstOperand + secondOperand).toString();
+                        break;
+                    case '-':
+                        displayValue = (firstOperand - secondOperand).toString();
+                        break;
+                    case '*':
+                        displayValue = (firstOperand * secondOperand).toString();
+                        break;
+                    case '/':
+                        displayValue = secondOperand === 0 ? 'Error' : (firstOperand / secondOperand).toString();
+                        break;
+                }
+                memory = parseFloat(displayValue);
+                firstOperand = null;
+                secondOperand = null;
+                currentOperation = null;
+                updateDisplay();
+            }
+        }
+
+        function clearDisplay() {
+            displayValue = '0';
+            firstOperand = null;
+            secondOperand = null;
+            currentOperation = null;
+            updateDisplay();
+        }
+
+        function calculateSquareRoot() {
+            const value = parseFloat(displayValue);
+            displayValue = value < 0 ? 'Error' : Math.sqrt(value).toString();
+            updateDisplay();
+        }
+
+        function calculatePercentage() {
+            const value = parseFloat(displayValue);
+            displayValue = (value / 100).toString();
+            updateDisplay();
+        }
+
+        function recallMemory() {
+            displayValue = memory.toString();
+            updateDisplay();
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

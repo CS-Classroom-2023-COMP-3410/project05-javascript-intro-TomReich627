@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Visualization Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .array-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+            height: 300px;
+            width: 600px;
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        .bar {
+            background-color: #007BFF;
+            width: 20px;
+            border-radius: 3px;
+        }
+
+        .bar.highlight {
+            background-color: #FFC107;
+        }
+
+        .controls button, select, input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .commentary {
+            margin-top: 20px;
+            font-size: 1rem;
+            color: #333;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sorting Visualization Tool</h1>
+
+    <div class="controls">
+        <select id="algorithmSelect">
+            <option value="bubble">Bubble Sort</option>
+            <option value="insertion">Insertion Sort</option>
+        </select>
+        <button onclick="generateArray()">Generate New Array</button>
+        <button onclick="startSorting()">Start Sorting</button>
+        <label>
+            Speed: <input type="range" id="speedControl" min="10" max="1000" value="500">
+        </label>
+    </div>
+
+    <div class="array-container" id="arrayContainer"></div>
+
+    <div class="commentary" id="commentary">Choose an algorithm and start sorting!</div>
+
+    <script>
+        const arrayContainer = document.getElementById('arrayContainer');
+        const commentary = document.getElementById('commentary');
+        const speedControl = document.getElementById('speedControl');
+        const algorithmSelect = document.getElementById('algorithmSelect');
+
+        let array = [];
+        let speed = 500;
+
+        function generateArray() {
+            array = Array.from({ length: 20 }, () => Math.floor(Math.random() * 100) + 1);
+            renderArray();
+            commentary.textContent = 'Array generated. Choose an algorithm to start sorting.';
+        }
+
+        function renderArray(highlightIndices = []) {
+            arrayContainer.innerHTML = '';
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.style.height = `${value * 3}px`;
+                bar.classList.add('bar');
+                if (highlightIndices.includes(index)) {
+                    bar.classList.add('highlight');
+                }
+                arrayContainer.appendChild(bar);
+            });
+        }
+
+        async function bubbleSort() {
+            commentary.textContent = 'Starting Bubble Sort...';
+            for (let i = 0; i < array.length; i++) {
+                for (let j = 0; j < array.length - i - 1; j++) {
+                    renderArray([j, j + 1]);
+                    await sleep(speed);
+                    if (array[j] > array[j + 1]) {
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        commentary.textContent = `Swapping ${array[j]} and ${array[j + 1]}`;
+                    }
+                }
+            }
+            renderArray();
+            commentary.textContent = 'Bubble Sort complete!';
+        }
+
+        async function insertionSort() {
+            commentary.textContent = 'Starting Insertion Sort...';
+            for (let i = 1; i < array.length; i++) {
+                let key = array[i];
+                let j = i - 1;
+                while (j >= 0 && array[j] > key) {
+                    renderArray([j, j + 1]);
+                    await sleep(speed);
+                    array[j + 1] = array[j];
+                    j--;
+                }
+                array[j + 1] = key;
+                renderArray();
+                commentary.textContent = `Inserting ${key} at position ${j + 1}`;
+            }
+            commentary.textContent = 'Insertion Sort complete!';
+        }
+
+        async function startSorting() {
+            const algorithm = algorithmSelect.value;
+            if (algorithm === 'bubble') {
+                await bubbleSort();
+            } else if (algorithm === 'insertion') {
+                await insertionSort();
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        speedControl.addEventListener('input', (e) => {
+            speed = 1000 - e.target.value;
+        });
+
+        generateArray();
+    </script>
+</body>
+</html>

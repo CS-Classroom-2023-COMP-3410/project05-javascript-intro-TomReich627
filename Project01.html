@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Digital Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #clock {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .settings {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .settings label {
+            margin: 5px 0;
+        }
+
+        .settings input {
+            margin-left: 10px;
+        }
+
+        .alarm {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .alarms-list {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            width: 200px;
+            text-align: center;
+        }
+
+        .btn {
+            margin-top: 10px;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="clock">00:00:00</div>
+
+    <div class="settings">
+        <label>
+            <input type="checkbox" id="formatToggle"> 12-Hour Format
+        </label>
+        <label>
+            Font Size:
+            <input type="number" id="fontSize" value="48" min="10" max="100"> px
+        </label>
+        <label>
+            Color Scheme:
+            <input type="color" id="colorPicker" value="#333">
+        </label>
+        <button class="btn" id="saveSettings">Save Settings</button>
+    </div>
+
+    <div class="alarm">
+        <h3>Set Alarm</h3>
+        <label>
+            Time: <input type="time" id="alarmTime">
+        </label>
+        <button class="btn" id="setAlarm">Set Alarm</button>
+        <div class="alarms-list" id="alarmsList">
+            <strong>Alarms:</strong>
+            <ul id="alarmItems"></ul>
+        </div>
+    </div>
+
+    <script>
+        const clock = document.getElementById('clock');
+        const formatToggle = document.getElementById('formatToggle');
+        const fontSizeInput = document.getElementById('fontSize');
+        const colorPicker = document.getElementById('colorPicker');
+        const saveSettingsButton = document.getElementById('saveSettings');
+        const alarmTimeInput = document.getElementById('alarmTime');
+        const setAlarmButton = document.getElementById('setAlarm');
+        const alarmsList = document.getElementById('alarmsList');
+        const alarmItems = document.getElementById('alarmItems');
+
+        let alarms = JSON.parse(localStorage.getItem('alarms')) || [];
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+
+            if (formatToggle.checked) {
+                const amPm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                clock.textContent = `${hours}:${minutes}:${seconds} ${amPm}`;
+            } else {
+                clock.textContent = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
+            }
+
+            alarms.forEach((alarm, index) => {
+                if (alarm === `${hours.toString().padStart(2, '0')}:${minutes}`) {
+                    alert(`Alarm ${index + 1}!`);
+                    alarms.splice(index, 1);
+                    updateAlarms();
+                }
+            });
+        }
+
+        function applySettings() {
+            clock.style.fontSize = `${fontSizeInput.value}px`;
+            clock.style.color = colorPicker.value;
+        }
+
+        function saveSettings() {
+            localStorage.setItem('clockSettings', JSON.stringify({
+                fontSize: fontSizeInput.value,
+                color: colorPicker.value,
+                is12HourFormat: formatToggle.checked
+            }));
+        }
+
+        function loadSettings() {
+            const savedSettings = JSON.parse(localStorage.getItem('clockSettings'));
+            if (savedSettings) {
+                fontSizeInput.value = savedSettings.fontSize;
+                colorPicker.value = savedSettings.color;
+                formatToggle.checked = savedSettings.is12HourFormat;
+                applySettings();
+            }
+
+            updateAlarms();
+        }
+
+        function setAlarm() {
+            const time = alarmTimeInput.value;
+            if (time && !alarms.includes(time)) {
+                alarms.push(time);
+                localStorage.setItem('alarms', JSON.stringify(alarms));
+                updateAlarms();
+                alert(`Alarm set for ${time}`);
+            } else {
+                alert('Invalid or duplicate alarm time!');
+            }
+        }
+
+        function updateAlarms() {
+            localStorage.setItem('alarms', JSON.stringify(alarms));
+            alarmItems.innerHTML = alarms
+                .map((time, index) => `<li>${time} <button onclick="removeAlarm(${index})">Remove</button></li>`)
+                .join('');
+        }
+
+        function removeAlarm(index) {
+            alarms.splice(index, 1);
+            updateAlarms();
+        }
+
+        // Event Listeners
+        saveSettingsButton.addEventListener('click', () => {
+            saveSettings();
+            applySettings();
+            alert('Settings saved!');
+        });
+
+        setAlarmButton.addEventListener('click', setAlarm);
+
+        fontSizeInput.addEventListener('input', applySettings);
+        colorPicker.addEventListener('input', applySettings);
+
+        // Initialize
+        loadSettings();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
+
